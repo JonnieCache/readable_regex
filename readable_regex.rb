@@ -14,9 +14,14 @@ quantifiers = { :optional => '?',
                 :one_or_more_lazy => '+?',
                 }
                 
+require 'sender'
+                
 class Integer
-  def repetitions
-    
+  def repetitions(&block)
+    @number = self
+    caller.instance_eval do
+      repetitions(self, nil, &block)
+    end
   end
 end
 
@@ -55,7 +60,7 @@ class Pattern
     @pattern << ']'
   end
   
-  def repetitions(number_of_times, to_repeat, &block)
+  def repetitions(number_of_times, to_repeat = nil, &block)
     if block_given?
       instance_eval(&block)
     else

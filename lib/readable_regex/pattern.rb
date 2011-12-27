@@ -1,60 +1,79 @@
 module ReadableRegex
   class Pattern
-    attr_accessor :pattern
-    
-    Definitions::TOKENS.each_pair do |method_name, token|
-      define_method(method_name) do
-        @pattern << token
+    class << self
+      attr_accessor :pattern
+      
+      ReadableRegex::Definitions::TOKENS.each_pair do |method_name, token|
+        define_method(method_name) do
+          puts method_name
+          @pattern << token
+        end
       end
-    end
-    
-    Definitions::QUANTIFIERS.each_pair do |method_name, quantifier|
-      define_method(method_name) do |to_quantify = '', &block|
+      
+      ReadableRegex::Definitions::QUANTIFIERS.each_pair do |method_name, quantifier|
+        define_method(method_name) do |to_quantify = '', &block|
+          puts method_name
+          if block_given?
+            instance_eval(&block)
+          else
+            @pattern << to_quantify
+          end
+          @pattern << quantifier
+        end
+      end
+      
+      def rr(&block)
+        @pattern = ''
+        instance_eval(&block)
+        self
+      end
+      
+      def literal(lit)
+        puts "literal #{lit}"
+        @pattern << lit.to_s
+      end
+      
+      def brackets(&block)
+        puts "brackets"
+        @pattern << '['
+        instance_eval(&block)
+        @pattern << ']'
+      end
+      
+      def repeat(number_of_times, to_repeat = nil, &block)
+        puts "repeat #{number_of_times}, #{to_repeat}"
         if block_given?
           instance_eval(&block)
         else
-          @pattern << to_quantify
+          @pattern << to_repeat
         end
-        @pattern << quantifier
+
+        string_to_insert = case number_of_times.class
+          when Range then [number_of_times.begin, number_of_times.end].join(',')
+          when Integer then number_of_times
+        end
+
+        @pattern << ['{', string_to_insert, '}'].join
       end
-    end
-    
-    def initialize(&block)
-      @pattern = ''
-      instance_eval(&block)
-    end
-    
-    def literal(lit)
-      @pattern << lit
-    end
-    
-    def brackets(&block)
-      @pattern << '['
-      instance_eval(&block)
-      @pattern << ']'
-    end
-    
-    def repeat(number_of_times, to_repeat = nil, &block)
-      if block_given?
-        instance_eval(&block)
-      else
-        @pattern << to_repeat
+      
+      def at_least(number_of_times, to_repeat = nil, &block)
+        puts "At LEAST #{number_of_times}, #{to_repeat}"
+        if block_given?
+          instance_eval(&block)
+        else
+          @pattern << to_repeat.to_s
+        end
+        @pattern << ['{', number_of_times, ',}'].join
       end
-      string_to_insert = case number_of_times.class
-        when Range then [number_of_times.begin, number_of_times.end].join(',')
-        when Integer then number_of_times
+
+      def to_s
+        pattern
       end
-      @pattern << ['{', string_to_insert, '}'].join
-    end
-    
-    def at_least(number_of_times, to_repeat = nil, &block)
-      if block_given?
-        instance_eval(&block)
-      else
-        @pattern << to_repeat
+
+      def r
+        Regexp.new(self.to_s)
       end
-      @pattern << ['{', number_of_times, ',}'].join
+      
     end
-    
   end
 end

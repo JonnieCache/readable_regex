@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe ReadableRegex do
+describe "singles" do
 	it 'renders literal' do
 		ReadableRegex::Pattern.rr do
 			literal 'foo'
@@ -11,7 +11,7 @@ describe ReadableRegex do
 		it "renders #{token}" do
 			ReadableRegex::Pattern.rr do
 				send(name)
-			end.r.should == Regexp.new(token.to_s)
+			end.r.should == /#{token.to_s}/
 		end
 	end
 
@@ -20,7 +20,7 @@ describe ReadableRegex do
 			ReadableRegex::Pattern.rr do
 				literal 'foo'
 				send(name)
-			end.r.should == Regexp.new("foo" + token.to_s)
+			end.r.should == /foo#{token.to_s}/
 		end
 	end
 
